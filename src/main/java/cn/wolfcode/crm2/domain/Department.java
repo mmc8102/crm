@@ -11,4 +11,5 @@ public class Department {
     private Employee manager;	//部门经理
     private Department parent;	//上级部门
     private Boolean state;	//状态
+    
 }
