@@ -23,5 +23,7 @@ public class Employee {
     private Date inputtime;
     private Boolean state;
     private Boolean admin;
-    private List<Role> roles = new ArrayList<>();    
+    private List<Role> roles = new ArrayList<>();
+    
+    
 }
