@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.wolfcode.crm2.mapper.LogMapper" >
+  <resultMap id="BaseResultMap" type="cn.wolfcode.crm2.domain.Log" >
+    <id column="id" property="id" jdbcType="BIGINT" />
+    <result column="opTime" property="optime" jdbcType="TIMESTAMP" />
+    <result column="opIp" property="opip" jdbcType="VARCHAR" />
+    <result column="function" property="function" jdbcType="VARCHAR" />
+    <result column="params" property="params" jdbcType="VARCHAR" />
+    <association property="opuser" javaType="cn.wolfcode.crm2.domain.Employee" >
+    	<id column="id" property="id"/>
+    	<result column="username" property="username"/>
+    </association>
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
+    delete from log
+    where id = #{id,jdbcType=BIGINT}
+  </delete>
+  <insert id="insert" parameterType="cn.wolfcode.crm2.domain.Log" useGeneratedKeys="true" keyProperty="id" >
+    insert into log (opUser_id, opTime, opIp, 
+      function, params)
+    values (#{opuser.id}, #{optime,jdbcType=TIMESTAMP}, #{opip,jdbcType=VARCHAR}, 
+      #{function,jdbcType=VARCHAR}, #{params,jdbcType=VARCHAR})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="cn.wolfcode.crm2.domain.Log" >
+    update log
+    set opUser_id = #{opuser.id},
+      opTime = #{optime,jdbcType=TIMESTAMP},
+      opIp = #{opip,jdbcType=VARCHAR},
+      function = #{function,jdbcType=VARCHAR},
+      params = #{params,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    select id, opUser_id, opTime, opIp, function, params
+    from log
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap" >
+    select id, opUser_id, opTime, opIp, function, params
+    from log
+  </select>
+  
+  <sql id="where_sql">
+  	<where>
+  		<if test="keyWord!=null">
+  			(username like concat('%',#{keyWord},'%') or l.opTime like concat('%',#{keyWord},'%') or l.opIp like concat('%',#{keyWord},'%'))
+  		</if>
+  	</where>
+  </sql>
+  <select id="queryForCount" resultType="long">
+  	SELECT COUNT(l.id) FROM log l left join employee e on l.opUser_id = e.id 
+  	<include refid="where_sql"/>
+  </select>
+  <select id="queryForList" resultMap="BaseResultMap">
+  	 select l.id, l.opUser_id, l.opTime, l.opIp, l.function, l.params, e.username
+    from log l left join employee e on l.opUser_id = e.id 
+    <include refid="where_sql"/>
+    <if test="page!=null">
+    	limit #{start},#{rows}
+    </if>
+  </select>
+</mapper>

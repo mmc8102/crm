@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.wolfcode.crm2.mapper.EmployeeMapper" >
+  <resultMap id="BaseResultMap" type="cn.wolfcode.crm2.domain.Employee" >
+    <id column="id" property="id" jdbcType="BIGINT" />
+    <result column="username" property="username" jdbcType="VARCHAR" />
+    <result column="realname" property="realname" jdbcType="VARCHAR" />
+    <result column="password" property="password" jdbcType="VARCHAR" />
+    <result column="tel" property="tel" jdbcType="VARCHAR" />
+    <result column="email" property="email" jdbcType="VARCHAR" />
+    <result column="inputtime" property="inputtime" jdbcType="TIMESTAMP" />
+    <result column="state" property="state" jdbcType="BIT" />
+    <result column="admin" property="admin" jdbcType="BIT" />
+    <association property="dept" javaType="cn.wolfcode.crm2.domain.Department" columnPrefix="d_">
+    	<id property="id" column="id"/>
+    	<result property="name" column="name"/>
+    </association>
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
+    delete from employee
+    where id = #{id,jdbcType=BIGINT}
+  </delete>
+  
+  <delete id="deleteRelation">
+  	DELETE FROM emp_role WHERE e_id = #{id}
+  </delete>
+  
+  <insert id="insert" parameterType="cn.wolfcode.crm2.domain.Employee" useGeneratedKeys="true" keyProperty="id" >
+    insert into employee (username, realname, password, 
+      tel, email, dept_id, 
+      inputtime, state, admin)
+    values (#{username,jdbcType=VARCHAR}, #{realname,jdbcType=VARCHAR}, #{password,jdbcType=VARCHAR}, 
+      #{tel,jdbcType=VARCHAR}, #{email,jdbcType=VARCHAR}, #{dept.id}, 
+      #{inputtime,jdbcType=TIMESTAMP}, #{state,jdbcType=BIT}, #{admin,jdbcType=BIT})
+  </insert>
+  
+  <insert id="insertRelation">
+  	INSERT INTO emp_role (e_id,r_id) VALUES (#{eid},#{rid})
+  </insert>
+  
+  <update id="updateByPrimaryKey" parameterType="cn.wolfcode.crm2.domain.Employee" >
+    update employee
+    set username = #{username,jdbcType=VARCHAR},
+      realname = #{realname,jdbcType=VARCHAR},
+      tel = #{tel,jdbcType=VARCHAR},
+      email = #{email,jdbcType=VARCHAR},
+      dept_id = #{dept.id},
+      inputtime = #{inputtime,jdbcType=TIMESTAMP}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    select id, username, realname, password, tel, email, dept_id, inputtime, state, admin
+    from employee
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap" >
+    select id, username, realname, password, tel, email, dept_id, inputtime, state, admin
+    from employee
+  </select>
+  <select id="getEmployeeForLogin" resultMap="BaseResultMap">
+  	select id, username, realname, tel, email, dept_id, inputtime, state, admin
+    from employee
+    where username = #{username} and password = #{password}
+  </select>
+  
+  <sql id="where_sql">
+  	<where>
+  		<if test="keyWord!=null">
+  			(username LIKE concat('%',#{keyWord},'%') OR realname LIKE concat('%',#{keyWord},'%') OR tel LIKE concat('%',#{keyWord},'%'))
+  		</if>
+  	</where>
+  </sql>
+  
+  <select id="queryForCount" resultType="long">
+  	SELECT COUNT(id) FROM employee 
+  	<include refid="where_sql"/>
+  </select>
+  <select id="queryForList" resultMap="BaseResultMap">
+  	select e.id, e.username, e.realname, e.tel, e.email, e.dept_id, e.inputtime, e.state, e.admin, d.id as d_id, d.name as d_name
+  	from employee e left join department d on e.dept_id = d.id
+  	<include refid="where_sql"/>
+  	<if test="page!=null">
+  		limit #{start}, #{rows}
+  	</if>
+  </select>
+  
+  <update id="updateState">
+  	UPDATE employee SET state = 0 WHERE id = #{id}
+  </update>
+  
+  <select id="queryByEid" resultType="long">
+  	SELECT r_id FROM emp_role WHERE e_id = #{id}
+  </select>
+  <select id="queryForDept" resultMap="BaseResultMap">
+   select id, username from employee
+  </select>
+</mapper>

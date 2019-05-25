@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.wolfcode.crm2.mapper.PayMapper">
+  
+  <resultMap id="BaseResultMap" type="cn.wolfcode.crm2.domain.Pay">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="sn" jdbcType="BIGINT" property="sn" />
+    <result column="pay" jdbcType="DECIMAL" property="pay" />
+    <result column="year" jdbcType="BIGINT" property="year" />
+    <result column="month" jdbcType="BIGINT" property="month" />
+    <association columnPrefix="e_" javaType="cn.wolfcode.crm2.domain.Employee" property="emp">
+    	<id column="id" property="id" />
+		<result column="username" property="username" />
+    </association>
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete from pay
+    where id = #{id}
+  </delete>
+  <insert id="insert" keyProperty="id" parameterType="cn.wolfcode.crm2.domain.Pay" useGeneratedKeys="true">
+    insert into pay (sn, pay, year, month, 
+      emp_id)
+    values (#{sn}, #{pay,jdbcType=DECIMAL}, #{year}, #{month}, 
+      #{emp.id})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="cn.wolfcode.crm2.domain.Pay">
+    update pay
+    set sn = #{sn}
+    pay = #{pay,jdbcType=DECIMAL},
+      year = #{year},
+      month = #{month},
+      emp_id = #{emp.id}
+    where id = #{id}
+  </update>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select id, sn, pay, year, month, emp_id
+    from pay
+    where id = #{id}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap">
+    select id, sn, pay, year, month, emp_id
+    from pay
+  </select>
+  <sql id="where_sql">
+	  <where>
+	  	<if test="year&gt;0">
+	  		AND p.year = #{year}
+	  	</if>
+	  	<if test="month&gt;0">
+	  		AND p.month = #{month}
+	  	</if>
+	  	<if test="username!=null">
+	  		AND e.username = #{username}
+	  	</if>
+	  </where>
+  </sql>
+  <select id="queryForCount" resultType="long">
+  	SELECT COUNT(p.id) FROM pay p LEFT JOIN employee e ON p.emp_id = e.id
+  	<include refid="where_sql" />
+  </select>
+  <select id="queryForList" resultMap="BaseResultMap">
+  	SELECT p.id, p.sn, p.pay, p.year, p.month, p.emp_id, e.id as e_id, e.username as e_username FROM pay p LEFT JOIN employee e ON p.emp_id = e.id
+  	<include refid="where_sql" />
+  	<if test="page!=null">
+  		LIMIT #{start}, #{rows}
+  	</if>
+  </select>
+  
+  <select id="getEidByUsername" resultType="long">
+  	SELECT id FROM employee WHERE username = #{username}
+  </select>
+</mapper>
